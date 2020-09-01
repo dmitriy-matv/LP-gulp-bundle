@@ -7,6 +7,9 @@ const del = require('del')
 const sync = require('browser-sync').create()
 const concat = require('gulp-concat')
 const minify = require('minify')
+const imagemin  = require('gulp-imagemin')
+const cache  = require('gulp-cache')
+
 
 let project_folder = "dist";
 let source_folder = "#src";
@@ -33,6 +36,18 @@ let path = {
         img:source_folder+"/img/**/*.{jpg,svg,ico,webp,gif}"
     },
     clean:"./" + project_folder + "/"
+}
+
+function images(){
+    return src(path.src.img)
+    .pipe(cache(imagemin({
+        interlaced: true
+    })))
+}
+
+function fonts(){
+    return src(path.src.fonts)
+    .pipe(dest(path.build.fonts))
 }
 
 function browserSync(params){
@@ -83,10 +98,11 @@ function clean_dist(){
     return del(path.clean)
 }
 
-let build = series(html, styles, js_process)
+let build = series(html, styles, js_process, images, fonts)
 let watch_b_sync = parallel(browserSync,watch_fls)
 
 exports.styles = styles
 exports.build = build
+exports.clean_dist = clean_dist
 exports.watch_b_sync = watch_b_sync
 exports.default = series(clean_dist, parallel(watch_b_sync, build))
